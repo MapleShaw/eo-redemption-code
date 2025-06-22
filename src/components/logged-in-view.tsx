@@ -32,53 +32,7 @@ export function LoggedInView({ user }: LoggedInViewProps) {
     profile_image_url: '/koc-avatar.png', // 或者使用您的头像 URL
   }
 
-  const handleClaim = async () => {
-    if (claimState.claiming || claimState.claimed) return
 
-    setClaimState(prev => ({ ...prev, claiming: true, error: undefined }))
-
-    try {
-      // Start animation
-      const timeline = gsap.timeline()
-      
-      // Add your GSAP animation here for the "code transfer"
-      timeline.to('.transfer-icon', {
-        duration: 2,
-        motionPath: {
-          path: '.connection-path',
-          autoRotate: true,
-          alignOrigin: [0.5, 0.5],
-        },
-        ease: 'power2.inOut',
-      })
-
-      // Wait for animation to complete
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      const response = await authApi.claimCode()
-      
-      if (response.success && response.code) {
-        setClaimState({
-          claiming: false,
-          claimed: true,
-          code: response.code,
-        })
-      } else {
-        setClaimState({
-          claiming: false,
-          claimed: false,
-          error: response.error || '领取失败',
-        })
-      }
-    } catch (error) {
-      console.error('Claim error:', error)
-      setClaimState({
-        claiming: false,
-        claimed: false,
-        error: error instanceof Error ? error.message : '网络错误',
-      })
-    }
-  }
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -112,9 +66,13 @@ export function LoggedInView({ user }: LoggedInViewProps) {
       <div className="mt-12 text-center">
         {!claimState.claimed && !claimState.code && (
           <ClaimButton
-            onClick={handleClaim}
-            loading={claimState.claiming}
-            error={claimState.error}
+            onSuccess={(code) => {
+              setClaimState({
+                claiming: false,
+                claimed: true,
+                code: code,
+              })
+            }}
           />
         )}
 

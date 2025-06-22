@@ -33,7 +33,8 @@ export async function createCodeChallenge(verifier: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', data)
   
   // Convert to base64url
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(digest)))
+  const uint8Array = new Uint8Array(digest)
+  const base64 = btoa(String.fromCharCode.apply(null, Array.from(uint8Array)))
   return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
 }
 

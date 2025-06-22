@@ -1,15 +1,12 @@
 import type { XUser, SessionData, AuthCheckResponse } from '../../src/types/user'
-import { APP_CONFIG } from '../../src/lib/constants'
 
-interface EdgeOneContext {
-  request: Request
-  env: {
-    [key: string]: string | undefined
-  }
-  params: Record<string, string>
+// EdgeOne Pages KV全局变量声明
+declare global {
+  var user_sessions_kv: any
+  var redemption_codes_kv: any
 }
 
-export async function onRequest(context: EdgeOneContext): Promise<Response> {
+export async function onRequest(context: any): Promise<Response> {
   const { request, env } = context
 
   // CORS headers
@@ -57,12 +54,13 @@ export async function onRequest(context: EdgeOneContext): Promise<Response> {
       )
     }
 
-    // Parse session cookie
+    // Parse session cookie (匹配callback设置的cookie名)
     const sessionCookie = cookieHeader
       .split(';')
-      .find(c => c.trim().startsWith(`${APP_CONFIG.session.cookieName}=`))
+      .find((c: string) => c.trim().startsWith('eo_session='))
     
     if (!sessionCookie) {
+      console.log('No eo_session cookie found')
       return new Response(
         JSON.stringify({ loggedIn: false } as AuthCheckResponse),
         {
@@ -76,14 +74,15 @@ export async function onRequest(context: EdgeOneContext): Promise<Response> {
     }
 
     const sessionId = sessionCookie.split('=')[1]
+    console.log('Found session ID:', sessionId)
     
-    // Get session data from KV
-    const sessionKey = `${APP_CONFIG.kv.prefixes.sessions}${sessionId}`
-    // Note: EdgeOne KV operations would be implemented here
-    // For now, we'll simulate with a placeholder
-    const sessionDataStr = await getFromKV(sessionKey, env)
+    // Get session data from KV (匹配callback存储的键格式)
+    const sessionKey = `user_session:${sessionId}`
+    console.log('Looking for session key:', sessionKey)
+    const sessionDataStr = await getFromKV(sessionKey)
     
     if (!sessionDataStr) {
+      console.log('Session not found in KV')
       return new Response(
         JSON.stringify({ loggedIn: false } as AuthCheckResponse),
         {
@@ -97,11 +96,12 @@ export async function onRequest(context: EdgeOneContext): Promise<Response> {
     }
 
     const sessionData: SessionData = JSON.parse(sessionDataStr)
+    console.log('Found session data for user:', sessionData.userProfile?.username)
     
     return new Response(
       JSON.stringify({
         loggedIn: true,
-        user: sessionData.userProfile,
+        userProfile: sessionData.userProfile,
       } as AuthCheckResponse),
       {
         status: 200,
@@ -130,17 +130,26 @@ export async function onRequest(context: EdgeOneContext): Promise<Response> {
   }
 }
 
-// EdgeOne KV operations using bound namespace
-async function getFromKV(key: string, env: any): Promise<string | null> {
-  // Access KV through bound variable (configured in EdgeOne Pages dashboard)
-  // Assuming 'user_sessions_kv' is the bound KV namespace variable name
-  if (env.user_sessions_kv) {
-    try {
-      return await env.user_sessions_kv.get(key)
-    } catch (error) {
-      console.error('KV get error:', error)
+// EdgeOne KV operations using global variables
+async function getFromKV(key: string): Promise<string | null> {
+  try {
+    if (user_sessions_kv) {
+      console.log('Trying KV get for key:', key)
+      const result = await user_sessions_kv.get(key)
+      console.log('KV get result:', result ? 'FOUND' : 'NOT_FOUND')
+      return result
+    } else {
+      console.log('KV not available, checking dev memory')
+      // 开发环境回退到内存存储
+      if ((global as any).devUserSessions) {
+        const result = (global as any).devUserSessions.get(key)
+        console.log('Dev memory get result:', result ? 'FOUND' : 'NOT_FOUND')
+        return result
+      }
       return null
     }
+  } catch (error) {
+    console.error('KV get error:', error)
+    return null
   }
-  return null
 } 

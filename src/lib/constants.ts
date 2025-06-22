@@ -6,7 +6,7 @@ export const APP_CONFIG = {
     tokenUrl: 'https://api.twitter.com/2/oauth2/token',
     userUrl: 'https://api.twitter.com/2/users/me',
     followingUrl: 'https://api.twitter.com/2/users/{id}/following',
-    scope: 'users.read follows.read',
+    scope: 'users.read',
   },
   session: {
     cookieName: 'eo-session',
