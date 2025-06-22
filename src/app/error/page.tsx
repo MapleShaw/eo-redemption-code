@@ -1,9 +1,10 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { ERROR_REASONS } from '@/lib/constants'
 
-export default function ErrorPage() {
+function ErrorContent() {
   const searchParams = useSearchParams()
   const reason = searchParams.get('reason')
   const detail = searchParams.get('detail')
@@ -86,4 +87,19 @@ export default function ErrorPage() {
       </div>
     </div>
   )
-} 
+}
+
+export default function ErrorPage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full max-w-md mx-auto">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">加载中...</p>
+        </div>
+      </div>
+    }>
+      <ErrorContent />
+    </Suspense>
+  )
+}

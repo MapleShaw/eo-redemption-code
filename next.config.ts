@@ -10,12 +10,13 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  experimental: {
-    optimizeCss: true,
-  },
+  // 暂时禁用实验性功能以避免构建错误
+  // experimental: {
+  //   optimizeCss: true,
+  // },
   // 开发环境代理配置
   async rewrites() {
-    // 只在开发环境启用代理
+    // 只在开发环境启用代理，生产环境下不使用rewrites
     if (isDev) {
       return [
         {

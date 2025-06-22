@@ -1,9 +1,10 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { CodeReveal } from '@/components/code-reveal'
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams()
   const code = searchParams.get('code')
 
@@ -47,4 +48,19 @@ export default function SuccessPage() {
       </div>
     </div>
   )
-} 
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full max-w-md mx-auto">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">加载中...</p>
+        </div>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
+  )
+}
