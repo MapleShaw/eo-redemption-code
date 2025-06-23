@@ -68,7 +68,8 @@ export async function onRequest(context: any): Promise<Response> {
         results.push({ code, status: 'success' })
       } catch (error) {
         console.error(`❌ 存储兑换码失败 ${code}:`, error)
-        results.push({ code, status: 'failed', error: error.message })
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        results.push({ code, status: 'failed', error: errorMessage })
       }
     }
     
@@ -102,11 +103,13 @@ export async function onRequest(context: any): Promise<Response> {
     
   } catch (error) {
     console.error('初始化过程中出错:', error)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message,
-        stack: error.stack 
+        error: errorMessage,
+        stack: errorStack 
       }, null, 2),
       { 
         status: 500,
