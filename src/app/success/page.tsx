@@ -3,74 +3,36 @@
 import { Suspense, useState, useEffect } from 'react'
 import { CodeReveal } from '@/components/code-reveal'
 import { ClaimButton } from '@/components/claim-button'
+import { useRouter } from 'next/navigation'
+import { authApi } from '@/lib/api'
 
 function SuccessContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [userProfile, setUserProfile] = useState<any>(null)
   const [claimedCode, setClaimedCode] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
-    // 检查用户登录状态
-    const checkLoginStatus = async (retryCount = 0) => {
+    const checkAuth = async () => {
       try {
-        console.log('Checking login status, attempt:', retryCount + 1)
-        console.log('Current cookies:', document.cookie)
+        const response = await authApi.checkAuth()
         
-        // EdgeOne Functions在开发环境运行在8088端口
-        const isDev = window.location.hostname === 'localhost' && window.location.port === '3000'
-        const apiUrl = isDev ? 'http://localhost:8088/me' : window.location.origin + '/me'
-        console.log('Calling API:', apiUrl)
-        console.log('Is dev mode:', isDev)
-        
-        const response = await fetch(apiUrl, {
-          credentials: 'include'
-        })
-        
-        console.log('Response status:', response.status)
-        
-        if (response.ok) {
-          const userData = await response.json()
-          console.log('Response data:', userData)
-          
-          if (userData.loggedIn && userData.userProfile) {
-            console.log('Login success, setting user profile')
-            setUserProfile(userData.userProfile)
-            setIsLoading(false)
-            return
-          } else {
-            console.log('API response indicates not logged in:', userData)
-          }
+        if (response.loggedIn) {
+          setUserProfile(response.user!)
         } else {
-          console.log('API response not OK, status:', response.status)
-          const errorText = await response.text()
-          console.log('Error response:', errorText)
+          router.push('/')
         }
-        
-        if (retryCount < 2) {
-          console.log('Retrying in 1 second... (attempt', retryCount + 1, 'of 3)')
-          setTimeout(() => checkLoginStatus(retryCount + 1), 1000)
-          return
-        } else {
-          console.log('All retries exhausted, showing error')
-          setError('请先完成登录')
-          setIsLoading(false)
-        }
-      } catch (err) {
-        console.error('Login check error:', err)
-        if (retryCount < 2) {
-          console.log('Error occurred, retrying in 1 second...')
-          setTimeout(() => checkLoginStatus(retryCount + 1), 1000)
-          return
-        }
-        setError('检查登录状态失败')
+      } catch (error) {
+        console.error('认证检查失败:', error)
+        router.push('/')
+      } finally {
         setIsLoading(false)
       }
     }
 
-    // 稍微延迟一下，确保callback完成
-    setTimeout(() => checkLoginStatus(), 500)
-  }, [])
+    checkAuth()
+  }, [router])
 
   const handleClaimSuccess = (code: string) => {
     setClaimedCode(code)

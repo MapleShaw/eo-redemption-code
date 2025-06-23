@@ -5,6 +5,7 @@ import { gsap } from 'gsap'
 import type { XUser } from '@/types/user'
 import { authApi } from '@/lib/api'
 import { formatUsername } from '@/lib/utils'
+import { APP_CONFIG } from '@/lib/constants'
 import { UserCard } from './user-card'
 import { ConnectionLine } from './connection-line'
 import { ClaimButton } from './claim-button'
@@ -25,14 +26,12 @@ export function LoggedInView({ user }: LoggedInViewProps) {
     claimed: false,
   })
 
-  // KOC 信息 - 直接配置，无需环境变量
+  // KOC 信息 - 使用统一配置
   const kocUser = {
-    name: 'MapleShaw', // 替换为您的真实姓名
-    username: '@msjiaozhu', // 替换为您的 X 用户名
-    profile_image_url: '/koc-avatar.png', // 或者使用您的头像 URL
+    name: APP_CONFIG.koc.name,
+    username: APP_CONFIG.koc.username,
+    profile_image_url: APP_CONFIG.koc.avatarUrl,
   }
-
-
 
   return (
     <div className="w-full max-w-4xl mx-auto">

@@ -8,6 +8,13 @@ export const APP_CONFIG = {
     followingUrl: 'https://api.twitter.com/2/users/{id}/following',
     scope: 'users.read',
   },
+  // KOC 配置 - 直接硬编码，无需环境变量
+  koc: {
+    userId: '552491458',
+    name: 'MapleShaw',
+    username: '@msjiaozhu', 
+    avatarUrl: '/koc-avatar.png',
+  },
   session: {
     cookieName: 'eo-session',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
