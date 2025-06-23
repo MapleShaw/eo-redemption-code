@@ -1,4 +1,21 @@
-import type { XUser, SessionData, AuthCheckResponse } from '../../src/types/user'
+// 内联类型定义
+interface XUser {
+  id: string
+  name: string
+  username: string
+  profile_image_url: string
+}
+
+interface SessionData {
+  accessToken: string
+  userProfile: XUser
+}
+
+interface AuthCheckResponse {
+  loggedIn: boolean
+  user?: XUser
+  userProfile?: XUser
+}
 
 // EdgeOne Pages KV全局变量声明
 declare global {

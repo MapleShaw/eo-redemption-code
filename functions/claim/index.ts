@@ -1,10 +1,31 @@
-import { APP_CONFIG } from '../../src/lib/constants'
-import type { SessionData } from '../../src/types/user'
-
 // EdgeOne Pages KV全局变量声明
 declare global {
   var user_sessions_kv: any
   var redemption_codes_kv: any
+}
+
+// 内联配置，避免导入问题
+const APP_CONFIG = {
+  koc: {
+    userId: '552491458',
+    username: '@msjiaozhu', 
+  },
+  twitter: {
+    followingUrl: 'https://api.twitter.com/2/users/{id}/following',
+  },
+}
+
+// 内联类型定义
+interface XUser {
+  id: string
+  name: string
+  username: string
+  profile_image_url: string
+}
+
+interface SessionData {
+  accessToken: string
+  userProfile: XUser
 }
 
 export async function onRequest(context: any): Promise<Response> {
@@ -136,7 +157,7 @@ export async function onRequest(context: any): Promise<Response> {
     console.log('User access token type:', accessToken.startsWith('mock_token_') ? 'MOCK' : 'REAL')
     
     // 开发环境检查：如果是mock用户，跳过关注验证
-    const isDev = process.env.NODE_ENV === 'development' || accessToken.startsWith('mock_token_')
+    const isDev = env.DEV === 'true' || accessToken.startsWith('mock_token_')
     if (isDev && accessToken.startsWith('mock_token_')) {
       console.log('DEV MODE: Skipping follower verification for mock user')
       // 开发环境模拟：随机决定是否关注，用于测试两种情况
