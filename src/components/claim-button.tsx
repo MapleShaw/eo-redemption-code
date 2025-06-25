@@ -3,11 +3,26 @@
 import { useState } from 'react'
 import { LoadingSpinner } from './ui/loading-spinner'
 
+interface XUser {
+  id: string
+  name: string
+  username: string
+  profile_image_url?: string
+}
+
+interface UserData {
+  user: XUser
+  accessToken: string
+  isFollowing: boolean
+  timestamp: number
+}
+
 interface ClaimButtonProps {
+  userData: UserData
   onSuccess: (code: string) => void
 }
 
-export function ClaimButton({ onSuccess }: ClaimButtonProps) {
+export function ClaimButton({ userData, onSuccess }: ClaimButtonProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -16,32 +31,54 @@ export function ClaimButton({ onSuccess }: ClaimButtonProps) {
     setError(null)
     
     try {
-      // EdgeOne Functions在开发环境运行在8088端口
-      const isDev = window.location.hostname === 'localhost' && window.location.port === '3000'
+      // 先检查本地是否已领取
+      const existingClaim = localStorage.getItem(`claimed_${userData.user.id}`)
+      if (existingClaim) {
+        setError('您已经领取过兑换码了')
+        setLoading(false)
+        return
+      }
+
+      // 调用EdgeOne Function
+      const isDev = window.location.hostname === 'localhost'
       const apiUrl = isDev ? 'http://localhost:8088/claim' : '/claim'
       
       const response = await fetch(apiUrl, {
         method: 'POST',
-        credentials: 'include'
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userData.user.id,
+          username: userData.user.username
+        })
       })
-      
-      if (response.ok) {
-        const data = await response.json()
-        if (data.code) {
-          onSuccess(data.code)
-        } else {
-          setError('获取兑换码失败')
-        }
-      } else {
+
+      if (!response.ok) {
         const errorData = await response.json()
-        setError(errorData.error || '领取失败')
+        throw new Error(errorData.error || '领取失败')
       }
+
+      const data = await response.json()
+      const claimedCode = data.code
+
+      // 记录本地领取状态
+      localStorage.setItem(`claimed_${userData.user.id}`, JSON.stringify({
+        code: claimedCode,
+        claimedAt: new Date().toISOString(),
+        username: userData.user.username
+      }))
+
+      onSuccess(claimedCode)
+      
     } catch (err) {
-      setError('网络错误，请重试')
+      console.error('领取兑换码失败:', err)
+      setError(err instanceof Error ? err.message : '领取失败，请重试')
     } finally {
       setLoading(false)
     }
   }
+
   return (
     <div className="space-y-4">
       <button

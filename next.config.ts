@@ -23,6 +23,11 @@ const nextConfig: NextConfig = {
           source: '/api/:path*',
           destination: 'http://localhost:8088/:path*',
         },
+        // 临时代理 Twitter API（仅开发环境）
+        {
+          source: '/twitter-api/:path*',
+          destination: 'https://api.twitter.com/:path*',
+        },
       ]
     }
     return []

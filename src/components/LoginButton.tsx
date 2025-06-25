@@ -10,21 +10,44 @@ export function LoginButton() {
     setIsLoading(true)
     
     try {
-      // 生成PKCE参数
+      const clientId = process.env.NEXT_PUBLIC_X_CLIENT_ID
+      
+      if (!clientId) {
+        throw new Error('缺少必需的环境变量: NEXT_PUBLIC_X_CLIENT_ID')
+      }
+      
+      // 生成PKCE参数和state（Confidential Client + PKCE增强安全性）
       const codeVerifier = generateCodeVerifier()
       const codeChallenge = await generateCodeChallenge(codeVerifier)
       const state = generateRandomState()
       
-      // 存储PKCE参数到sessionStorage
+      // 存储到sessionStorage
       sessionStorage.setItem('oauth_code_verifier', codeVerifier)
       sessionStorage.setItem('oauth_state', state)
       
-      // 构建OAuth URL
+      const isDev = process.env.NEXT_PUBLIC_DEV === 'true'
+      const redirectUri = isDev 
+        ? 'http://localhost:3000/callback'
+        : `${window.location.origin}/callback`
+      
+      // 验证所有参数
+      if (!codeChallenge || !state || !redirectUri) {
+        throw new Error('OAuth参数生成失败')
+      }
+      
+      console.log('=== OAuth Login Parameters ===')
+      console.log('Client ID:', clientId ? 'present' : 'missing')
+      console.log('Code Challenge:', codeChallenge ? 'present' : 'missing')
+      console.log('State:', state ? 'present' : 'missing')
+      console.log('Redirect URI:', redirectUri)
+      console.log('==============================')
+      
+      // Confidential Client + PKCE OAuth URL
       const params = new URLSearchParams({
         response_type: 'code',
-        client_id: process.env.NEXT_PUBLIC_X_CLIENT_ID!,
-        redirect_uri: 'http://localhost:3000/callback',
-        scope: 'tweet.read users.read',
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        scope: 'tweet.read users.read follows.read',
         state: state,
         code_challenge: codeChallenge,
         code_challenge_method: 'S256'
@@ -32,15 +55,9 @@ export function LoginButton() {
       
       const authUrl = `https://twitter.com/i/oauth2/authorize?${params.toString()}`
       
-      // 调试信息
-      console.log('=== OAuth Debug Info ===')
-      console.log('Client ID:', process.env.NEXT_PUBLIC_X_CLIENT_ID)
-      console.log('Redirect URI:', 'http://localhost:3000/callback')
-      console.log('Scope:', 'tweet.read users.read')
-      console.log('OAuth URL:', authUrl)
-      console.log('========================')
+      console.log('Confidential Client + PKCE OAuth URL:', authUrl)
+      console.log('Redirect URI:', redirectUri)
       
-      // 跳转到X认证页面
       window.location.href = authUrl
       
     } catch (error) {

@@ -5,48 +5,12 @@ export const APP_CONFIG = {
     authUrl: 'https://twitter.com/i/oauth2/authorize',
     tokenUrl: 'https://api.twitter.com/2/oauth2/token',
     userUrl: 'https://api.twitter.com/2/users/me',
-    followingUrl: 'https://api.twitter.com/2/users/{id}/following',
     scope: 'users.read',
   },
-  // KOC 配置 - 直接硬编码，无需环境变量
   koc: {
     userId: '552491458',
     name: 'MapleShaw',
     username: '@msjiaozhu', 
     avatarUrl: '/koc-avatar.png',
   },
-  session: {
-    cookieName: 'eo-session',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  },
-  kv: {
-    prefixes: {
-      codes: 'code:',
-      claimedUsers: 'claimed_user:',
-      sessions: 'session:',
-    },
-  },
-  ui: {
-    animationDuration: 2000, // 2 seconds for code transfer animation
-    revealDelay: 300, // delay between each character reveal
-  },
-} as const
-
-export const API_ENDPOINTS = {
-  me: '/api/me',
-  callback: '/api/callback',
-  claim: '/api/claim',
-} as const
-
-export const ROUTES = {
-  home: '/',
-  success: '/success',
-  error: '/error',
-} as const
-
-export const ERROR_REASONS = {
-  notFollower: 'not_a_follower',
-  alreadyClaimed: 'already_claimed',
-  noCodesLeft: 'no_codes_left',
-  authError: 'auth_error',
 } as const 

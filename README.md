@@ -86,7 +86,7 @@
 - **逻辑**:
   1. 通过 Cookie 验证用户会话。从 KV 的会话数据中检索用户 ID 和 `access_token`。
   2. 检查 `claimed_users` KV 存储，看 `claimed_user:<user_id>` 是否存在。如果存在，返回"已领取"错误。
-  3. 使用存储的 `access_token` 调用 X API (`GET /2/users/:id/following`) 以验证用户是否关注了 KOC。如果不是，返回"不是关注者"错误。
+  3. 使用存储的 `access_token` 调用 X API (`GET /2/users/:id/followers`) 以验证用户是否关注了 KOC（反向关注检查：获取KOC的关注者列表，查找当前用户是否在其中）。如果不是，返回"不是关注者"错误。
   4. 如果所有检查都通过，从 KV 中获取可用兑换码列表（例如 `list({ prefix: 'code:' })`）。如果没有，返回"兑换码已领完"错误。
   5. 原子化地执行领取操作：
      - a. 挑选一个可用的兑换码键。
